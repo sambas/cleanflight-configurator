@@ -41,6 +41,14 @@ var BOARD_DEFINITIONS = [
         name: "STM32F3Discovery",
         identifier: "SDF3",
         serialPortCount: 3
+    }, {
+        name: "AnyFC",
+        identifier: "ANYF",
+        serialPortCount: 4
+    }, {
+        name: "Revo",
+        identifier: "REVO",
+        serialPortCount: 2
     }
 ];
 

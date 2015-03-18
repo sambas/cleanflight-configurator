@@ -109,6 +109,9 @@ $(document).ready(function () {
                     case 'firmware_flasher':
                         TABS.firmware_flasher.initialize(content_ready);
                         break;
+                    case 'help':
+                        TABS.help.initialize(content_ready);
+                        break;
 
                     case 'auxiliary':
                         TABS.auxiliary.initialize(content_ready);
@@ -152,6 +155,9 @@ $(document).ready(function () {
                         break;
                     case 'logging':
                         TABS.logging.initialize(content_ready);
+                        break;
+                    case 'dataflash':
+                        TABS.dataflash.initialize(content_ready);
                         break;
                     case 'cli':
                         TABS.cli.initialize(content_ready);

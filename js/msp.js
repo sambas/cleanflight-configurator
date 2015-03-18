@@ -22,6 +22,9 @@ var MSP_codes = {
     MSP_SONAR:                  58,
     MSP_PID_CONTROLLER:         59,
     MSP_SET_PID_CONTROLLER:     60,
+    MSP_DATAFLASH_SUMMARY:      70,
+    MSP_DATAFLASH_READ:         71,
+    MSP_DATAFLASH_ERASE:        72,
 
     // Multiwii MSP commands
     MSP_IDENT:              100,
@@ -98,6 +101,20 @@ var MSP = {
 
     ledDirectionLetters:        ['n', 'e', 's', 'w', 'u', 'd'],      // in LSB bit order
     ledFunctionLetters:         ['i', 'w', 'f', 'a', 't', 'r', 'c'], // in LSB bit order
+
+    supportedBaudRates: [ // 0 based index.
+        'AUTO',
+        '9600',
+        '19200',
+        '38400',
+        '57600',
+        '115200',
+        '230400',
+        '250000',
+    ],
+    
+    serialPortFunctions: // in LSB bit order 
+        ['MSP', 'GPS', 'TELEMETRY_FRSKY', 'TELEMETRY_HOTT', 'TELEMETRY_MSP', 'TELEMETRY_SMARTPORT', 'RX_SERIAL', 'BLACKBOX'],
 
     read: function (readInfo) {
         var data = new Uint8Array(readInfo.data);
@@ -273,13 +290,22 @@ var MSP = {
                 ANALOG.amperage = data.getInt16(5, 1) / 100; // A
                 break;
             case MSP_codes.MSP_RC_TUNING:
-                RC_tuning.RC_RATE = parseFloat((data.getUint8(0) / 100).toFixed(2));
-                RC_tuning.RC_EXPO = parseFloat((data.getUint8(1) / 100).toFixed(2));
-                RC_tuning.roll_pitch_rate = parseFloat((data.getUint8(2) / 100).toFixed(2));
-                RC_tuning.yaw_rate = parseFloat((data.getUint8(3) / 100).toFixed(2));
-                RC_tuning.dynamic_THR_PID = parseFloat((data.getUint8(4) / 100).toFixed(2));
-                RC_tuning.throttle_MID = parseFloat((data.getUint8(5) / 100).toFixed(2));
-                RC_tuning.throttle_EXPO = parseFloat((data.getUint8(6) / 100).toFixed(2));
+                var offset = 0;
+                RC_tuning.RC_RATE = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                RC_tuning.RC_EXPO = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                if (CONFIG.apiVersion < 1.7) {
+                    RC_tuning.roll_pitch_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                } else {
+                    RC_tuning.roll_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                    RC_tuning.pitch_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                }
+                RC_tuning.yaw_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                RC_tuning.dynamic_THR_PID = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                RC_tuning.throttle_MID = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                RC_tuning.throttle_EXPO = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                if (CONFIG.apiVersion >= 1.7) {
+                    RC_tuning.dynamic_THR_breakpoint = data.getUint16(offset++, 1);
+                }
                 break;
             case MSP_codes.MSP_PID:
                 // PID data arrived, we need to scale it and save to appropriate bank / array
@@ -545,7 +571,7 @@ var MSP = {
                     identifier += String.fromCharCode(data.getUint8(offset));
                 }
                 CONFIG.boardIdentifier = identifier;
-                CONFIG.boardVersion = data.getUint16(offset);
+                CONFIG.boardVersion = data.getUint16(offset, 1);
                 offset+=2;
                 break;
 
@@ -554,24 +580,46 @@ var MSP = {
                 break;
 
             case MSP_codes.MSP_CF_SERIAL_CONFIG:
-                SERIAL_CONFIG.ports = [];
-                var offset = 0;
-                var serialPortCount = (data.byteLength - (4 * 4)) / 2;
-                for (var i = 0; i < serialPortCount; i++) {
-                    var serialPort = {
-                        identifier: data.getUint8(offset++, 1),
-                        scenario: data.getUint8(offset++, 1)
+                
+                if (CONFIG.apiVersion < 1.6) {
+                    SERIAL_CONFIG.ports = [];
+                    var offset = 0;
+                    var serialPortCount = (data.byteLength - (4 * 4)) / 2;
+                    for (var i = 0; i < serialPortCount; i++) {
+                        var serialPort = {
+                            identifier: data.getUint8(offset++, 1),
+                            scenario: data.getUint8(offset++, 1)
+                        }
+                        SERIAL_CONFIG.ports.push(serialPort); 
                     }
-                    SERIAL_CONFIG.ports.push(serialPort); 
+                    SERIAL_CONFIG.mspBaudRate = data.getUint32(offset, 1);
+                    offset+= 4;
+                    SERIAL_CONFIG.cliBaudRate = data.getUint32(offset, 1);
+                    offset+= 4;
+                    SERIAL_CONFIG.gpsBaudRate = data.getUint32(offset, 1);
+                    offset+= 4;
+                    SERIAL_CONFIG.gpsPassthroughBaudRate = data.getUint32(offset, 1);
+                    offset+= 4;
+                } else {
+                    SERIAL_CONFIG.ports = [];
+                    var offset = 0;
+                    var bytesPerPort = 1 + 2 + (1 * 4);
+                    var serialPortCount = data.byteLength / bytesPerPort;
+                    
+                    for (var i = 0; i < serialPortCount; i++) {
+                        var serialPort = {
+                            identifier: data.getUint8(offset, 1),
+                            functions: MSP.serialPortFunctionMaskToFunctions(data.getUint16(offset + 1, 1)),
+                            msp_baudrate: MSP.supportedBaudRates[data.getUint8(offset + 3, 1)],
+                            gps_baudrate: MSP.supportedBaudRates[data.getUint8(offset + 4, 1)],
+                            telemetry_baudrate: MSP.supportedBaudRates[data.getUint8(offset + 5, 1)],
+                            blackbox_baudrate: MSP.supportedBaudRates[data.getUint8(offset + 6, 1)]
+                        }
+                        
+                        offset += bytesPerPort;
+                        SERIAL_CONFIG.ports.push(serialPort);
+                    }
                 }
-                SERIAL_CONFIG.mspBaudRate = data.getUint32(offset, 1);
-                offset+= 4;
-                SERIAL_CONFIG.cliBaudRate = data.getUint32(offset, 1);
-                offset+= 4;
-                SERIAL_CONFIG.gpsBaudRate = data.getUint32(offset, 1);
-                offset+= 4;
-                SERIAL_CONFIG.gpsPassthroughBaudRate = data.getUint32(offset, 1);
-                offset+= 4;
                 break;
 
             case MSP_codes.MSP_SET_CF_SERIAL_CONFIG:
@@ -621,7 +669,7 @@ var MSP = {
                 for (var i = 0; i < 8; i ++) {
                     var channelIndex = data.getUint8(i);
                     if (channelIndex < 255) {
-                        SERVO_CONFIG[i].indexOfChannelToForward;
+                        SERVO_CONFIG[i].indexOfChannelToForward = channelIndex;
                     } else {
                         SERVO_CONFIG[i].indexOfChannelToForward = undefined;
                     }
@@ -671,8 +719,26 @@ var MSP = {
             case MSP_codes.MSP_SET_LED_STRIP_CONFIG:
                 console.log('Led strip config saved');
                 break;
-
-
+            case MSP_codes.MSP_DATAFLASH_SUMMARY:
+                if (data.byteLength >= 13) {
+                    DATAFLASH.ready = (data.getUint8(0) & 1) != 0;
+                    DATAFLASH.sectors = data.getUint32(1, 1);
+                    DATAFLASH.totalSize = data.getUint32(5, 1);
+                    DATAFLASH.usedSize = data.getUint32(9, 1);
+                } else {
+                    // Firmware version too old to support MSP_DATAFLASH_SUMMARY
+                    DATAFLASH.ready = false;
+                    DATAFLASH.sectors = 0;
+                    DATAFLASH.totalSize = 0;
+                    DATAFLASH.usedSize = 0;
+                }
+                break;
+            case MSP_codes.MSP_DATAFLASH_READ:
+                // No-op, let callback handle it
+                break;
+            case MSP_codes.MSP_DATAFLASH_ERASE:
+                console.log("Data flash erase begun...");
+                break;
             case MSP_codes.MSP_SET_MODE_RANGE:
                 console.log('Mode range saved');
                 break;
@@ -798,6 +864,9 @@ var MSP = {
     }
 };
 
+/**
+ * Encode the request body for the MSP request with the given code and return it as an array of bytes.
+ */
 MSP.crunch = function (code) {
     var buffer = [];
 
@@ -854,11 +923,20 @@ MSP.crunch = function (code) {
         case MSP_codes.MSP_SET_RC_TUNING:
             buffer.push(parseInt(RC_tuning.RC_RATE * 100));
             buffer.push(parseInt(RC_tuning.RC_EXPO * 100));
-            buffer.push(parseInt(RC_tuning.roll_pitch_rate * 100));
+            if (CONFIG.apiVersion < 1.7) {
+                buffer.push(parseInt(RC_tuning.roll_pitch_rate * 100));
+            } else {
+                buffer.push(parseInt(RC_tuning.roll_rate * 100));
+                buffer.push(parseInt(RC_tuning.pitch_rate * 100));
+            }
             buffer.push(parseInt(RC_tuning.yaw_rate * 100));
             buffer.push(parseInt(RC_tuning.dynamic_THR_PID * 100));
             buffer.push(parseInt(RC_tuning.throttle_MID * 100));
             buffer.push(parseInt(RC_tuning.throttle_EXPO * 100));
+            if (CONFIG.apiVersion >= 1.7) {
+                buffer.push(lowByte(RC_tuning.dynamic_THR_breakpoint));
+                buffer.push(highByte(RC_tuning.dynamic_THR_breakpoint));
+            }
             break;
         // Disabled, cleanflight does not use MSP_SET_BOX.
         /*
@@ -928,28 +1006,46 @@ MSP.crunch = function (code) {
             }
             break;
         case MSP_codes.MSP_SET_CF_SERIAL_CONFIG:
-            for (var i = 0; i < SERIAL_CONFIG.ports.length; i++) {
-                buffer.push(SERIAL_CONFIG.ports[i].scenario);
+            if (CONFIG.apiVersion < 1.6) {
+
+                for (var i = 0; i < SERIAL_CONFIG.ports.length; i++) {
+                    buffer.push(SERIAL_CONFIG.ports[i].scenario);
+                }
+                buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 0));
+                buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 1));
+                buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 2));
+                buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 3));
+    
+                buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 0));
+                buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 1));
+                buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 2));
+                buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 3));
+    
+                buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 0));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 1));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 2));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 3));
+    
+                buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 0));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 1));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 2));
+                buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 3));
+            } else {
+                for (var i = 0; i < SERIAL_CONFIG.ports.length; i++) {
+                    var serialPort = SERIAL_CONFIG.ports[i];
+                    
+                    buffer.push(serialPort.identifier);
+                    
+                    var functionMask = MSP.serialPortFunctionsToMask(serialPort.functions);
+                    buffer.push(specificByte(functionMask, 0));
+                    buffer.push(specificByte(functionMask, 1));
+                    
+                    buffer.push(MSP.supportedBaudRates.indexOf(serialPort.msp_baudrate));
+                    buffer.push(MSP.supportedBaudRates.indexOf(serialPort.gps_baudrate));
+                    buffer.push(MSP.supportedBaudRates.indexOf(serialPort.telemetry_baudrate));
+                    buffer.push(MSP.supportedBaudRates.indexOf(serialPort.blackbox_baudrate));
+                }
             }
-            buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 0));
-            buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 1));
-            buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 2));
-            buffer.push(specificByte(SERIAL_CONFIG.mspBaudRate, 3));
-
-            buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 0));
-            buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 1));
-            buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 2));
-            buffer.push(specificByte(SERIAL_CONFIG.cliBaudRate, 3));
-
-            buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 0));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 1));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 2));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsBaudRate, 3));
-
-            buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 0));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 1));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 2));
-            buffer.push(specificByte(SERIAL_CONFIG.gpsPassthroughBaudRate, 3));
             break;
             
         default:
@@ -959,6 +1055,27 @@ MSP.crunch = function (code) {
     return buffer;
 };
 
+/**
+ * Send a request to read a block of data from the dataflash at the given address and pass that address and a dataview
+ * of the returned data to the given callback (or null for the data if an error occured).
+ */
+MSP.dataflashRead = function(address, onDataCallback) {
+    MSP.send_message(MSP_codes.MSP_DATAFLASH_READ, [address & 0xFF, (address >> 8) & 0xFF, (address >> 16) & 0xFF, (address >> 24) & 0xFF], 
+            false, function(response) {
+        var chunkAddress = response.data.getUint32(0, 1);
+        
+        // Verify that the address of the memory returned matches what the caller asked for
+        if (chunkAddress == address) {
+            /* Strip that address off the front of the reply and deliver it separately so the caller doesn't have to
+             * figure out the reply format:
+             */
+            onDataCallback(address, new DataView(response.data.buffer, response.data.byteOffset + 4, response.data.buffer.byteLength - 4));
+        } else {
+            // Report error
+            onDataCallback(address, null);
+        }
+    });
+} ;
 
 MSP.sendModeRanges = function(onCompleteCallback) {
     var nextFunction = send_next_mode_range; 
@@ -1084,3 +1201,24 @@ MSP.sendLedStripConfig = function(onCompleteCallback) {
     }
 }
 
+MSP.serialPortFunctionMaskToFunctions = function(functionMask) {
+    var functions = [];
+    
+    for (var index = 0; index < MSP.serialPortFunctions.length; index++) {
+        if (bit_check(functionMask, index)) {
+            functions.push(MSP.serialPortFunctions[index]);
+        }
+    }
+    return functions;
+}
+
+MSP.serialPortFunctionsToMask = function(functions) {
+    var mask = 0;
+    for (var index = 0; index < functions.length; index++) {
+        var bitIndex = MSP.serialPortFunctions.indexOf(functions[index]);
+        if (bitIndex >= 0) {
+            mask = bit_set(mask, bitIndex);
+        }
+    }
+    return mask;
+}

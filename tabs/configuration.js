@@ -113,7 +113,6 @@ TABS.configuration.initialize = function (callback, scrollPosition) {
                         + '</td>');
                 radioGroups.push(features[i].group);
             } else {
-                var feature_e = row_e.find('input.feature');                
                 row_e = $('<tr><td><input class="feature" id="feature-'
                         + i
                         + '" name="'
@@ -128,6 +127,8 @@ TABS.configuration.initialize = function (callback, scrollPosition) {
                         + features[i].description
                         + '</td>');
                 
+                var feature_e = row_e.find('input.feature');
+
                 feature_e.prop('checked', bit_check(BF_CONFIG.features, features[i].bit));
                 feature_e.data('bit', features[i].bit);
             }
@@ -259,11 +260,12 @@ TABS.configuration.initialize = function (callback, scrollPosition) {
         if(CONFIG.apiVersion >= 1.8) {
             $('input[name="autodisarmdelay"]').val(ARMING_CONFIG.auto_disarm_delay);
             $('input[name="disarmkillswitch"]').prop('checked', ARMING_CONFIG.disarm_kill_switch);
-            if(bit_check(BF_CONFIG.features, 4 + 1))//MOTOR_STOP
+            $('div.disarm').show();            
+            if(bit_check(BF_CONFIG.features, 4))//MOTOR_STOP
                 $('div.disarmdelay').show();
+            else
+                $('div.disarmdelay').hide();
         }
-        else       
-            $('div.disarm').hide();
         
         // fill throttle
         $('input[name="minthrottle"]').val(MISC.minthrottle);

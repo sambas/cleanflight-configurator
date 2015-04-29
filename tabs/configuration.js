@@ -156,7 +156,8 @@ TABS.configuration.initialize = function (callback, scrollPosition) {
         // generate GPS
         var gpsProtocols = [
             'NMEA',
-            'UBLOX'
+            'UBLOX',
+            'NAZA'
         ];
 
         var gpsBaudRates = [

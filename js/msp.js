@@ -240,16 +240,18 @@ var MSP = {
                 SENSOR_DATA.magnetometer[2] = data.getInt16(16, 1) / 1090;
                 break;
             case MSP_codes.MSP_SERVO:
+                var servoCount = message_length / 2;
                 var needle = 0;
-                for (var i = 0; i < 8; i++) {
+                for (var i = 0; i < servoCount; i++) {
                     SERVO_DATA[i] = data.getUint16(needle, 1);
 
                     needle += 2;
                 }
                 break;
             case MSP_codes.MSP_MOTOR:
+                var motorCount = message_length / 2;
                 var needle = 0;
-                for (var i = 0; i < 8; i++) {
+                for (var i = 0; i < motorCount; i++) {
                     MOTOR_DATA[i] = data.getUint16(needle, 1);
 
                     needle += 2;
@@ -299,7 +301,10 @@ var MSP = {
                 RC_tuning.RC_EXPO = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
                 if (semver.lt(CONFIG.apiVersion, "1.7.0")) {
                     RC_tuning.roll_pitch_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                    RC_tuning.pitch_rate = 0;
+                    RC_tuning.roll_rate = 0;
                 } else {
+                    RC_tuning.roll_pitch_rate = 0;
                     RC_tuning.roll_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
                     RC_tuning.pitch_rate = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
                 }
@@ -308,7 +313,15 @@ var MSP = {
                 RC_tuning.throttle_MID = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
                 RC_tuning.throttle_EXPO = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
                 if (semver.gte(CONFIG.apiVersion, "1.7.0")) {
-                    RC_tuning.dynamic_THR_breakpoint = data.getUint16(offset++, 1);
+                    RC_tuning.dynamic_THR_breakpoint = data.getUint16(offset, 1);
+                    offset += 2;
+                } else {
+                    RC_tuning.dynamic_THR_breakpoint = 0;
+                }
+                if (semver.gte(CONFIG.apiVersion, "1.10.0")) {
+                    RC_tuning.RC_YAW_EXPO = parseFloat((data.getUint8(offset++) / 100).toFixed(2));
+                } else {
+                    RC_tuning.RC_YAW_EXPO = 0;
                 }
                 break;
             case MSP_codes.MSP_PID:
@@ -965,6 +978,9 @@ MSP.crunch = function (code) {
             if (semver.gte(CONFIG.apiVersion, "1.7.0")) {
                 buffer.push(lowByte(RC_tuning.dynamic_THR_breakpoint));
                 buffer.push(highByte(RC_tuning.dynamic_THR_breakpoint));
+            }
+			if (semver.gte(CONFIG.apiVersion, "1.10.0")) {
+                buffer.push(parseInt(RC_tuning.RC_YAW_EXPO * 100));
             }
             break;
         // Disabled, cleanflight does not use MSP_SET_BOX.

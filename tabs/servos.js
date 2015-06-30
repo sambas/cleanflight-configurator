@@ -205,10 +205,11 @@ TABS.servos.initialize = function (callback) {
         $('div.tab-servos table.fields tr:not(:first)').remove();
 
         var model = $('div.tab-servos strong.model');
-        var supported_models = [1, 4, 5, 8, 14, 20, 21];
+        var supported_models = [1, 4, 5, 8, 14, 20, 21, 24, 25];
 
         switch (CONFIG.multiType) {
             case 1: // TRI
+            case 25: // CUSTOM_TRI
                 // looking ok so far
                 model.text('TRI');
 
@@ -249,6 +250,7 @@ TABS.servos.initialize = function (callback) {
                 process_servos('Right Wing', '', 4, false);
                 break;
             case 14: // Airplane
+            case 24: // Custom_Airplane
                 model.text('Airplane');
 
                 // rate
@@ -279,19 +281,18 @@ TABS.servos.initialize = function (callback) {
 
             default:
                 model.text(chrome.i18n.getMessage('servosModelNoSupport'));
-
-                // implementation of feature servo_tilt
-                if (AUX_CONFIG.indexOf('CAMSTAB') > -1 || AUX_CONFIG.indexOf('CAMTRIG') > -1) {
-                    // Gimbal on
-                    // needs to be verified
-                    model.text('Gimbal / Tilt Servos');
-
-                    // rate
-                    process_servos('Pitch Servo', '', 0, 2);
-                    process_servos('Roll Servo', '', 1, 2);
-                }
         }
 
+        // implementation of feature servo_tilt
+        if (AUX_CONFIG.indexOf('CAMSTAB') > -1 || AUX_CONFIG.indexOf('CAMTRIG') > -1) {
+            // Gimbal on
+            // needs to be verified
+
+            // rate
+            process_servos('Pitch Servo', '', 0, 2);
+            process_servos('Roll Servo', '', 1, 2);
+        }
+                
         // UI hooks for dynamically generated elements
         $('table.directions select, table.directions input, table.fields select, table.fields input').change(function () {
             if ($('div.live input').is(':checked')) {

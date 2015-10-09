@@ -31,10 +31,7 @@
         "fileSystem",
         "fileSystem.write",
         "fileSystem.retainEntries",
-        "notifications"
-    ],
-
-    "optional_permissions": [
+        "notifications",
         {"usbDevices": [
             {"vendorId": 1155, "productId": 57105}
         ]}

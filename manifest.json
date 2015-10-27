@@ -32,6 +32,10 @@
         "fileSystem.write",
         "fileSystem.retainEntries",
         "notifications",
+        "alwaysOnTopWindows"
+    ],
+
+    "optional_permissions": [
         {"usbDevices": [
             {"vendorId": 1155, "productId": 57105}
         ]}

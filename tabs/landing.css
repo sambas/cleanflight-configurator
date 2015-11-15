@@ -1,193 +1,236 @@
-.tab-landing .left {
-    width: 60%;
-    position: relative;
-}
-.tab-landing .right {
-    float: left;
-
-    margin-left: 10px;
-    width: calc(40% - 10px);
-    position: relative;
+/* general layout */
+.tab-landing {
+    min-height: 100%;
+    overflow: hidden;
 }
 
-.tab-landing .section {
-    margin-bottom: 10px;
-    width: 100%;
-    overflow: auto;
+.tab-landing .content_wrapper {
+    padding: 0;
+    min-height: 100%;
+    height: 100%;
+    overflow-y: auto;
+    background-color: #436c2c;
 }
 
-.left .section:last-child,
-.right .section:last-child {
-    margin-bottom: 0px;
+.tab-landing .content_top {
+    height: 140px;
+    background: #59aa29;
+    padding: 20px;
 }
 
-.tab-landing .optional_permissions {
-    display: none;
-
-    border: 1px solid silver;
+.tab-landing .content_mid {
+    background-color: #eaeaea;
+    overflow: hidden;
 }
-.tab-landing .optional_permissions .title {
-    line-height: 20px;
 
-    text-align: center;
-    font-weight: bold;
+.tab-landing .content_foot {
+    clear: both;
+    padding: 20px;
+    padding-bottom: 5px;
+}
+
+/* hero block */
+.tab-landing .logowrapper {
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5px;
+    width: 800px;
     color: white;
-
-    border-bottom: 1px solid silver;
-    background-color: #cd4c4c;
-}
-.tab-landing .optional_permissions p {
-    padding: 5px;
-}
-.tab-landing .optional_permissions a {
-    display: block;
-    float: left;
-
-    height: 28px;
-    line-height: 28px;
-
-    margin: 0 0 5px 5px;
-    padding: 0 15px 0 15px;
-
-    text-align: center;
-    font-weight: bold;
-
-    border: 1px solid silver;
-    background-color: #ececec;
-}
-.tab-landing .optional_permissions a:hover {
-    background-color: #dedcdc;
+    font-size: 14px;
+    font-family: 'open_sanslight', Arial;
 }
 
-.tab-landing .row {
-    margin-bottom: 10px;
-    float: left;
-    width: 100%;
-}
-.tab-landing .row:last-child {
-    margin-bottom: 0px;
-}
-
-.welcome {
-    height: 196px;
-}
-
-.contributing,
-.welcome {
-    border: 1px solid silver;
-}
-
-.contributing_and_sponsors .right,
-.contributing_and_sponsors .left {
-    min-height: 260px
-}
-
-.section-content {
+.tab-landing .logowrapper img {
+    width: 420px;
     margin: 5px;
 }
 
-.contributing a,
-.welcome a {
-    font-weight: bold;
-}
-.contributing a:hover,
-.welcome a:hover {
-    text-decoration: underline;
+.tab-landing .logowrapper span {
+    font-size: 22px;
+    font-family: 'open_sanslight', Arial;
 }
 
-.contributing li {
-    list-style-type: disc;
-    list-style-position: initial;
-    margin-left: 20px;
+/* sponsors blocks */
+.sponsors .title {
+    text-transform: uppercase;
+    font-size: 10px;
 }
 
-.changelog {
-    border: 1px solid silver;
-}
-.changelog .title {
-    line-height: 20px;
-
+.sponsors {
+    margin-left: auto;
+    margin-right: auto;
     text-align: center;
-    font-weight: bold;
+    color: silver;
+}
+
+.sponsors ul {
+    margin-top: 5px;
+}
+
+.sponsors li {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.sponsors li a {
+    border-radius: 3px;
+    padding: 2px;
+    padding-left: 4px;
+    padding-right: 4px;
+    font-size: 13px;
+    line-height: 22px;
     color: white;
-
-    border-bottom: 1px solid silver;
-    background-color: #3f4241;
+    font-weight: normal;
+    font-family: 'open_sanslight', Arial;
 }
-.changelog .wrapper {
-    height: 165px;
 
-    padding: 5px;
-
-    overflow-y: scroll;
-    overflow-x: hidden;
-
-    -webkit-user-select: text;
+.sponsors li a:hover {
+    background-color: rgba(255, 255, 255, 0.30);
+    color: #fff;
 }
-.changelog .wrapper span {
+
+.text1, .text2, .text3 {
+    margin-top: 15px;
+    margin-bottom: 15px;
+    font-weight: normal;
+    font-family: 'open_sansregular', Arial;
+    font-size: 12px;
+}
+
+/* text columns */
+.tab-landing .content_mid .column .wrap {
+    padding: 15px;
+    padding-bottom: 0px;
+    padding-top: 0px;
+}
+
+.tab-landing .content_mid .column .wrap2 {
+    padding: 10px;
+    padding-bottom: 10px;
+    padding-top: 10px;
+}
+
+.tab-landing .content_mid h2, .tab-landing .content_mid h3 {
+    margin-bottom: 5px;
+    font-size: 13px;
+}
+
+.tab-landing .content_mid h3 {
+    font-size: 12px;
+}
+
+.tab-landing .content_mid .text1 .wrap {
+    margin-left: 0px;
+}
+
+.tab-landing .content_mid .text1 {
+    width: 37%;
+}
+
+.tab-landing .content_mid .text2 {
+    width: 40%;
+}
+
+.tab-landing .content_mid .text2 ul {
+    margin-top: 10px;
+}
+
+.tab-landing .content_mid .text2 li {
+    padding: 5px 0;
+    border-top: 1px dotted silver;
+}
+
+.tab-landing .content_mid .text3 {
+    width: 23%;
+}
+
+.tab-landing .content_mid .text3 .wrap2 {
+    border: 1px solid silver;
+    border-radius: 5px;
+    background: white;
+    margin-right: 25px;
+    margin-left: 20px;
+    margin-top: 5px;
+    min-height: 187px;
+    font-size: 11px;
+}
+
+.tab-landing .content_mid .text3 .donate {
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* changelog block */
+#changelog {
+    width: 250px;
+    height: 100%;
+    position: fixed;
+    right: -245px;
+    top: 0px;
+}
+
+#changelog .wrapper {
+    height: 100%;
+    padding: 0 20px;
+    border-left: 5px solid green;
+    overflow-y: auto;
+    display: none;
+}
+
+#changelog .button {
+    transform: rotate(270deg);
+    top: 50px;
+    right: 215px;
+    position: absolute;
+    background: green;
+    border-radius: 5px 5px 0 0;
+    border-bottom: none;
+    height: 30px;
+}
+
+#changelog .button a {
+    display: block;
+    padding: 5px 10px;
+    width: 70px;
+    text-align: center;
+    color: white;
+}
+
+#changelog .title {
+    margin: 20px 0;
+    font-size: 16px;
+}
+
+#content.log_open #changelog {
+    right: 0px;
+    background: white;
+}
+
+#content.log_open #changelog .wrapper {
+    display: block;
+}
+
+/* changelog content */
+#changelog .log {
+    line-height: 17px;
+}
+
+#changelog .log span {
+    display: block;
     font-weight: bold;
+    padding-bottom: 5px;
+    border-bottom: 1px solid #ddd;
 }
-.changelog .wrapper p {
+
+#changelog .log ul {
+    margin: 5px 0 20px 10px;
+}
+
+#changelog .log li {
+    font-weight: normal;
     margin-bottom: 5px;
 }
 
-.donate {
-    border: 1px solid silver;
-}
-
-.donate .buttons {
-    margin-bottom: 10px;
-}
-
-.section .title {
-    line-height: 20px;
-
-    text-align: center;
-    font-weight: bold;
-    color: white;
-
-    border-bottom: 1px solid silver;
-    background-color: #3f4241;
-}
-.donate p {
-    padding: 5px;
-}
-.donate a {
-    display: block;
-
-    width: 74px;
-    height: 21px;
-
-    margin: auto;    
-}
-
-.contributing_and_sponsors .left .section {
-    position: absolute;
-}
-
-.contributing_and_sponsors .left .contributing {
-    top: 0%;
-    height: 50%;
-}
-
-.contributing_and_sponsors .left .donate {
-    top: 50%;
-    margin-top: 10px;
-    height: calc(50% - 10px);
-}
-
-.tab-landing .sponsors {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 1px solid silver;
-}
-.tab-landing .sponsors p {
-    padding: 5px;
-}
-.tab-landing .sponsors p a {
-    font-weight: bold;
-}
-.tab-landing .sponsors p a:hover {
-    text-decoration: underline;
+#changelog .log p {
+    margin-bottom: 20px;
 }

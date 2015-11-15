@@ -165,7 +165,7 @@ TABS.ports.initialize = function (callback, scrollPosition) {
                     var select_e;
                     if (column != 'telemetry') {
                         var checkboxId = 'functionCheckbox-' + portIndex + '-' + columnIndex + '-' + i;
-                        functions_e.prepend('<span class="function"><input type="checkbox" id="' + checkboxId + '" value="' + functionName + '" /><label for="' + checkboxId + '"> ' + functionRule.displayName + '</label></span>');
+                        functions_e.prepend('<span class="function"><input type="checkbox" class="togglemedium" id="' + checkboxId + '" value="' + functionName + '" /><label for="' + checkboxId + '"> ' + functionRule.displayName + '</label></span>');
 
                         if (serialPort.functions.indexOf(functionName) >= 0) {
                             var checkbox_e = functions_e.find('#' + checkboxId);
@@ -210,10 +210,10 @@ TABS.ports.initialize = function (callback, scrollPosition) {
             MSP.send_message(MSP_codes.MSP_STATUS);
         }, 250, true);
 
-        if (callback) callback();
+        GUI.content_ready(callback);
     }
 
-    function on_save_handler() {
+   function on_save_handler() {
         
         // update configuration based on current ui state
         SERIAL_CONFIG.ports = [];
@@ -274,9 +274,6 @@ TABS.ports.initialize = function (callback, scrollPosition) {
                     });
                },  1500); // seems to be just the right amount of delay to prevent data request timeouts
             }
-
-
-
         }
     }
 };

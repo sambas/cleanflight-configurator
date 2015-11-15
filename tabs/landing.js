@@ -14,14 +14,32 @@ TABS.landing.initialize = function (callback) {
         localize();
 
         // load changelog content
-        $('div.changelog.configurator .wrapper').load('./changelog.html');
+        $('#changelog .log').load('./changelog.html');
 
         $('div.welcome a, div.sponsors a').click(function () {
             googleAnalytics.sendEvent('ExternalUrls', 'Click', $(this).prop('href'));
         });
 
-        if (callback) callback();
+        /** changelog trigger **/
+        $("#changelog_toggle").on('click', function() {
+            var state = $(this).data('state2');
+            if (state) {
+                $("#changelog").animate({right: -245}, 200, function () {
+                    $("#content").removeClass('log_open');
+                    });
+                state = false;
+            } else {
+                $("#changelog").animate({right: 0}, 200);
+                $("#content").addClass('log_open');
+                state = true;
+            }
+            $(this).text(state ? 'Close' : 'Changelog');
+            $(this).data('state2', state);
+        });
+
+        GUI.content_ready(callback);
     });
+
 };
 
 TABS.landing.cleanup = function (callback) {

@@ -49,7 +49,7 @@ TABS.gps.initialize = function (callback) {
             var url = 'https://maps.google.com/?q=' + lat + ',' + lon;
 
             $('.GPS_info td.fix').html((GPS_DATA.fix) ? chrome.i18n.getMessage('gpsFixTrue') : chrome.i18n.getMessage('gpsFixFalse'));
-            $('.GPS_info td.alt').text(GPS_DATA.alt.toFixed(2) + ' m');
+            $('.GPS_info td.alt').text(GPS_DATA.alt + ' m');
             $('.GPS_info td.lat a').prop('href', url).text(lat.toFixed(4) + ' deg');
             $('.GPS_info td.lon a').prop('href', url).text(lon.toFixed(4) + ' deg');
             $('.GPS_info td.speed').text(GPS_DATA.speed + ' cm/s');

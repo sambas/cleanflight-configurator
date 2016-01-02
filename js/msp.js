@@ -286,7 +286,7 @@ var MSP = {
                 GPS_DATA.numSat = data.getUint8(1);
                 GPS_DATA.lat = data.getInt32(2, 1);
                 GPS_DATA.lon = data.getInt32(6, 1);
-                GPS_DATA.alt = data.getInt16(10, 1)/100.0;
+                GPS_DATA.alt = data.getUint16(10, 1);
                 GPS_DATA.speed = data.getUint16(12, 1);
                 GPS_DATA.ground_course = data.getUint16(14, 1);
                 break;
